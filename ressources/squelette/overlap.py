@@ -30,7 +30,64 @@ def chevauchement_maximal(x: str, y: str) -> tuple[int, str, str, int]:
         >>> chevauchement_maximal("CACGC", "ACCA")
         (4, 'ACGC', 'AC-C', 4)
     """
-    raise NotImplementedError  # TODO
+    m = len(x)
+    n = len(y)
+
+    V = [[0] * (n + 1) for _ in range(m + 1)]   # premiere ligne et premiere colonne à 0
+    P = [[""] * (n + 1) for _ in range(m + 1)]  # directions
+
+    for i in range(1,m+1):
+        for j in range(1,n+1):
+            if x[i-1] == y[j-1]:
+                match = 4 #match
+            else:
+                match = -4 #mismatch
+            diag = V[i-1][j-1] + match
+            haut = V[i-1][j] - 8
+            gauche = V[i][j-1] - 8
+            score_max, direction = max((diag, "diag"), (haut, "haut"),(gauche, "gauche"))
+            V[i][j] = score_max
+            P[i][j] = direction
+
+
+    # trouver valeur max dans la derniere ligne et colonne
+    
+    max_total = -float("inf")
+    i_max, j_max = m, n
+
+    for j in range(1, n + 1): 
+        if V[m][j] > max_total:
+            max_total = V[m][j]
+            i_max, j_max = m, j
+
+    for i in range(1, m + 1):
+        if V[i][n] > max_total:
+            max_total = V[i][n]
+            i_max, j_max = i, n
+
+    # faire le backtracking
+    align_x = ""
+    align_y = ""
+
+
+    while i_max > 0 and j_max > 0:
+        direction = P[i_max][j_max] 
+    
+        if direction == "diag":
+            align_x = x[i_max - 1] + align_x
+            align_y = y[j_max - 1] + align_y
+            i_max -= 1
+            j_max -= 1
+        elif direction == "haut":
+            align_x = x[i_max - 1] + align_x
+            align_y = "-" + align_y
+            i_max -= 1
+        elif direction == "gauche":
+            align_x = "-" + align_x
+            align_y = y[j_max - 1] + align_y
+            j_max -= 1
+    longueur_chevauchement = len(align_x)
+    return max_total, align_x, align_y, longueur_chevauchement
 
 
 def matrice_chevauchements(reads: list[str]) -> list[list[int]]:
@@ -45,4 +102,17 @@ def matrice_chevauchements(reads: list[str]) -> list[list[int]]:
         maximal de la paire ordonnee ``(reads[i], reads[j])``. La diagonale
         contient des zeros.
     """
-    raise NotImplementedError  # TODO
+    N = len(reads)
+
+    M = [[0] * N for _ in range(N)]
+
+    for i in range(N):
+        for j in range(N):
+            if i!=j:
+                score_max, _, _, _ = chevauchement_maximal(reads[i], reads[j])
+                M[i][j] = score_max
+            else:
+                M[i][j] = 0     # si les reads sont pareils
+
+    return M
+
