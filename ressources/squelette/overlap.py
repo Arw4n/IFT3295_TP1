@@ -34,6 +34,7 @@ def chevauchement_maximal(x: str, y: str) -> tuple[int, str, str, int]:
     n = len(y)
 
     V = [[0] * (n + 1) for _ in range(m + 1)]   # premiere ligne et premiere colonne à 0
+    
     P = [[""] * (n + 1) for _ in range(m + 1)]  # directions
 
     for i in range(1,m+1):
@@ -59,11 +60,6 @@ def chevauchement_maximal(x: str, y: str) -> tuple[int, str, str, int]:
         if V[m][j] > max_total:
             max_total = V[m][j]
             i_max, j_max = m, j
-
-    for i in range(1, m + 1):
-        if V[i][n] > max_total:
-            max_total = V[i][n]
-            i_max, j_max = i, n
 
     # faire le backtracking
     align_x = ""
