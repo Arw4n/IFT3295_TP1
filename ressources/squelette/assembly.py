@@ -42,7 +42,6 @@ def graphe_chevauchements(
                 G.add_edge(i, j, poids=scores[i][j])
 
     return G
-    raise NotImplementedError  #TODO
 
 
 def reduction_transitive(graphe: nx.DiGraph) -> nx.DiGraph:
@@ -68,22 +67,27 @@ def reduction_transitive(graphe: nx.DiGraph) -> nx.DiGraph:
             GT.remove_edge(i[1], i[0])
         else:
             GT.remove_edge(i[0], i[1])
+
+    aretes_a_supprimer = []
     
     for origine in list(GT.nodes()): # DFS pour voir les chemins redondants
         for dest in list(GT.successors(origine)):
             visite={origine}
             voisins = [i for i in GT.successors(origine) if i!=dest]
+            chemin_existe = False
 
-            while len(voisins)!=0:
+            while len(voisins)!=0 and not chemin_existe:
                 act = voisins.pop()
                 if act not in visite:
                     visite.add(act)
                     if act == dest:
-                        GT.remove_edge(origine, dest)
-                        break
-                    voisins.extend(GT.successors(act))
+                        chemin_existe = True
+                        aretes_a_supprimer.append((origine, dest))
+                    else:
+                        voisins.extend(GT.successors(act))
+    
+    GT.remove_edges_from(aretes_a_supprimer)
     return GT
-    raise NotImplementedError  # TODOGT.remove_edge(i[1], i[0])
 
 
 def ordre_assemblage(graphe: nx.DiGraph) -> list[int]:
@@ -97,26 +101,24 @@ def ordre_assemblage(graphe: nx.DiGraph) -> list[int]:
         list[int]: Indices des reads dans un chemin du graphe qui visite
         chaque noeud exactement une fois. L'enonce garantit l'existence de
         ce chemin apres reduction.
+    Trouve l'ordre d'assemblage des reads dans le graphe reduit.
+
+    Args:
+        graphe (nx.DiGraph): Graphe reduit produit par
+            ``reduction_transitive``.
+
+    Returns:
+        list[int]: Indices des reads dans un chemin du graphe qui visite
+        chaque noeud exactement une fois. L'enonce garantit l'existence de
+        ce chemin apres reduction.
     """
-    ordre = [] 
-    for i in graphe.nodes: # On teste jusqu'à trouver le bon noeud de départ
-        aretes = list(nx.dfs_edges(graphe,source=i)) # Affiche l'arbre du graphe selon un DFS
-
-        sources = [tpl[0] for tpl in aretes]
-        apparitions = [tpl[0] for tpl in aretes if sources.count(tpl[0])>1] # Vérifie si un sommet est visité plus d'une fois
-
-
-        if len(aretes)!=len(graphe.nodes())-1: # Si tous les sommets ne sont pas atteints
-            continue
-        elif len(apparitions)>0:
-            continue
-        else:
-            ordre = [tpl[0] for tpl in aretes]
-            ordre.append(aretes[-1][1]) # Ajoute le dernier sommet
-            break
-
+    source = [n for n, degree in graphe.in_degree() if degree == 0] # Trouver le noeud de départ (degré entrant = 0)
+    if len(source) ==0:
+        return []
+    aretes = list(nx.dfs_edges(graphe,source=source[0])) # Affiche l'arbre du graphe selon un DFS
+    ordre = [source[0]] + [i[1] for i in aretes]
     return ordre
-    raise NotImplementedError  # TODO
+    
 
 def sequence_finale(reads: list[str], ordre: list[int]) -> tuple[str, list[int]]:
     """Assemble les reads en une sequence de fragment genomique.
@@ -130,15 +132,19 @@ def sequence_finale(reads: list[str], ordre: list[int]) -> tuple[str, list[int]]
         longueurs des chevauchements entre les paires de reads consecutifs,
         dans l'ordre.
     """
+    if not ordre:
+        return ("", [])
+    
     read_tot = reads[ordre[0]]
     l_chevauchements = []
 
     for i in range(len(ordre)-1):
         read1 =reads[ordre[i]]
         read2 = reads[ordre[i+1]]
-        chevauchement = chevauchement_maximal(read1, read2)[3]
-        l_chevauchements.append(chevauchement)
-        read_tot +=read2[chevauchement:]
+        _,alignx, aligny,_ = chevauchement_maximal(read1, read2)
+        chev_y = len(aligny.replace("-", ""))
+
+        l_chevauchements.append(len(alignx))
+        read_tot +=read2[chev_y:]
     
     return (read_tot, l_chevauchements)
-    raise NotImplementedError  # TODO

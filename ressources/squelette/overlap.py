@@ -33,7 +33,7 @@ def chevauchement_maximal(x: str, y: str) -> tuple[int, str, str, int]:
     m = len(x)
     n = len(y)
 
-    V = [[0] * (n + 1) for _ in range(m + 1)]   # premiere ligne et premiere colonne à 0   
+    V = [[0] * (n + 1) for _ in range(m + 1)]   # premiere ligne et premiere colonne à 0  
     P = [[""] * (n + 1) for _ in range(m + 1)]  # directions
 
     for i in range(1,m+1):
