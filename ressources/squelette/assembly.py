@@ -11,6 +11,8 @@ Ce fichier est A COMPLETER. Regles:
 
 import networkx as nx
 
+from overlap import chevauchement_maximal
+
 SEUIL_DEFAUT: int = 80
 
 # Les noeuds du graphe sont les entiers 0..n-1 (indices des reads); chaque
@@ -31,7 +33,15 @@ def graphe_chevauchements(
         Une arete ``(i, j)`` existe si ``scores[i][j] >= seuil``; son attribut
         ``poids`` vaut le score correspondant.
     """
-    raise NotImplementedError  # TODO
+    
+    G = nx.DiGraph()
+    G.add_nodes_from([i for i in range(len(scores))]) # création des noeuds du graphe
+    for i in range(len(scores)): # Parcours en O(n²)
+        for j in range(len(scores[i])):
+            if scores[i][j]>=seuil:
+                G.add_edge(i, j, poids=scores[i][j])
+
+    return G
 
 
 def reduction_transitive(graphe: nx.DiGraph) -> nx.DiGraph:
@@ -49,7 +59,37 @@ def reduction_transitive(graphe: nx.DiGraph) -> nx.DiGraph:
         nx.DiGraph: Copie reduite du graphe d'entree. Le graphe d'entree n'est
         pas modifie.
     """
-    raise NotImplementedError  # TODO
+    GT = graphe.copy()
+
+    Deux_cycles = [(u, v) for u, v in GT.edges if GT.has_edge(v, u) and u < v] # Vérification de 2-cycles
+    for i in Deux_cycles:
+        if GT.edges[i[0], i[1]]["poids"] >= GT.edges[i[1], i[0]]["poids"]: # Garder le plus lourd
+            GT.remove_edge(i[1], i[0])
+        else:
+            GT.remove_edge(i[0], i[1])
+
+    aretes_a_supprimer = []
+    
+    for origine in list(GT.nodes()): # DFS pour voir les chemins redondants
+        for dest in list(GT.successors(origine)):
+            visite={origine}
+            voisins = [i for i in GT.successors(origine) if i!=dest]
+            chemin_existe = False
+
+            while len(voisins)!=0 and not chemin_existe:
+                act = voisins.pop()
+                if act not in visite:
+                    visite.add(act)
+                    if act == dest:
+                        chemin_existe = True
+                        aretes_a_supprimer.append((origine, dest))
+                    else:
+                        voisins.extend(GT.successors(act))
+    
+    GT.remove_edges_from(aretes_a_supprimer)
+    return GT
+
+
 def ordre_assemblage(graphe: nx.DiGraph) -> list[int]:
     """Trouve l'ordre d'assemblage des reads dans le graphe reduit.
 
@@ -61,9 +101,24 @@ def ordre_assemblage(graphe: nx.DiGraph) -> list[int]:
         list[int]: Indices des reads dans un chemin du graphe qui visite
         chaque noeud exactement une fois. L'enonce garantit l'existence de
         ce chemin apres reduction.
-    """
-    raise NotImplementedError  # TODO
+    Trouve l'ordre d'assemblage des reads dans le graphe reduit.
 
+    Args:
+        graphe (nx.DiGraph): Graphe reduit produit par
+            ``reduction_transitive``.
+
+    Returns:
+        list[int]: Indices des reads dans un chemin du graphe qui visite
+        chaque noeud exactement une fois. L'enonce garantit l'existence de
+        ce chemin apres reduction.
+    """
+    source = [n for n, degree in graphe.in_degree() if degree == 0] # Trouver le noeud de départ (degré entrant = 0)
+    if len(source) ==0:
+        return []
+    aretes = list(nx.dfs_edges(graphe,source=source[0])) # Affiche l'arbre du graphe selon un DFS
+    ordre = [source[0]] + [i[1] for i in aretes]
+    return ordre
+    
 
 def sequence_finale(reads: list[str], ordre: list[int]) -> tuple[str, list[int]]:
     """Assemble les reads en une sequence de fragment genomique.
@@ -77,4 +132,19 @@ def sequence_finale(reads: list[str], ordre: list[int]) -> tuple[str, list[int]]
         longueurs des chevauchements entre les paires de reads consecutifs,
         dans l'ordre.
     """
-    raise NotImplementedError  # TODO
+    if not ordre:
+        return ("", [])
+    
+    read_tot = reads[ordre[0]]
+    l_chevauchements = []
+
+    for i in range(len(ordre)-1):
+        read1 =reads[ordre[i]]
+        read2 = reads[ordre[i+1]]
+        _,alignx, aligny,_ = chevauchement_maximal(read1, read2)
+        chev_y = len(aligny.replace("-", ""))
+
+        l_chevauchements.append(len(alignx))
+        read_tot +=read2[chev_y:]
+    
+    return (read_tot, l_chevauchements)

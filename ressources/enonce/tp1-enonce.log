@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025/Debian) (preloaded format=pdflatex 2026.9.28)  28 SEP 2026 10:23
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (TeX Live 2025/Debian) (preloaded format=pdflatex 2026.9.28)  3 OCT 2026 10:41
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -24,7 +24,7 @@ File: size12.clo 2025/01/22 v1.4n Standard LaTeX file (size option)
 \bibindent=\dimen148
 )
 
-! LaTeX Error: File `enumitem.sty' not found.
+! LaTeX Error: File `enumitem.sty.sty' not found.
 
 Type X to quit or <RETURN> to proceed,
 or enter new name. (Default extension: sty)
@@ -40,10 +40,10 @@ l.3 \usepackage
  
 Here is how much of TeX's memory you used:
  244 strings out of 469514
- 2973 string characters out of 5470072
+ 2989 string characters out of 5470072
  433756 words of memory out of 5000000
  28988 multiletter control sequences out of 15000+600000
  628019 words of font info for 41 fonts, out of 8000000 for 9000
  14 hyphenation exceptions out of 8191
- 35i,0n,38p,148b,36s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 35i,0n,38p,152b,36s stack positions out of 10000i,1000n,20000p,200000b,200000s
 !  ==> Fatal error occurred, no output PDF file produced!
