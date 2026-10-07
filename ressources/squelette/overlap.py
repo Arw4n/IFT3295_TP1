@@ -36,15 +36,19 @@ def chevauchement_maximal(x: str, y: str) -> tuple[int, str, str, int]:
     V = [[0] * (n + 1) for _ in range(m + 1)]   # premiere ligne et premiere colonne à 0
     P = [[""] * (n + 1) for _ in range(m + 1)]  # directions
 
+    for j in range(1, n + 1):
+        V[0][j] = INDEL * j
+        P[0][j] = "gauche"
+
     for i in range(1,m+1):
         for j in range(1,n+1):
             if x[i-1] == y[j-1]:
-                match = 4 #match
+                match = MATCH #match
             else:
-                match = -4 #mismatch
+                match = MISMATCH #mismatch
             diag = V[i-1][j-1] + match
-            haut = V[i-1][j] - 8
-            gauche = V[i][j-1] - 8
+            haut = V[i-1][j] + INDEL
+            gauche = V[i][j-1] + INDEL
             score_max, direction = max((diag, "diag"), (haut, "haut"),(gauche, "gauche"))
             V[i][j] = score_max
             P[i][j] = direction
@@ -65,7 +69,7 @@ def chevauchement_maximal(x: str, y: str) -> tuple[int, str, str, int]:
     align_y = ""
 
 
-    while i_max > 0 and j_max > 0:
+    while j_max > 0:
         direction = P[i_max][j_max] 
     
         if direction == "diag":
